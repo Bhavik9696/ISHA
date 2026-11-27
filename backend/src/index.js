@@ -58,6 +58,10 @@ app.use(async (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/itinerary', itineraryRoutes);
 
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'ISHA Backend API is running' });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
