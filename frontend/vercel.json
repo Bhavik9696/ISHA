@@ -1,8 +1,6 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/(.*)", "destination": "https://backend-ruby-iota-95.vercel.app/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+// In production (Vercel), route /api/* through same-origin vercel.json rewrite to avoid CORS
+const BASE = import.meta.env.PROD
+  ? ''
+  : (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
 
 const api = axios.create({ baseURL: BASE })
 
