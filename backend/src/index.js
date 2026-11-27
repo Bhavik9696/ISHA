@@ -31,25 +31,8 @@ async function connectDB() {
 }
 
 // ── Security middleware ─────────────────────────────────────────────────────
-const envOrigins = (process.env.FRONTEND_URL || '')
-  .split(',')
-  .map(s => s.trim().replace(/\/+$/, ''))
-  .filter(Boolean);
-
-const allowedOrigins = Array.from(new Set([
-  ...envOrigins,
-  'https://isha-green.vercel.app',
-  'http://localhost:5173',
-]));
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (curl, server-to-server) or matching allowed origins
-    if (!origin || allowedOrigins.includes(origin.replace(/\/+$/, ''))) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
+  origin: true,
   credentials: true,
 };
 
