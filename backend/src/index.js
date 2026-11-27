@@ -11,13 +11,48 @@ const { seedAdminPassword } = require('./middleware/seedAdmin');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ── Database connection (cached for serverless + local) ─────────────────────
+let dbReady = null;
+async function connectDB() {
+  if (mongoose.connection.readyState === 1) return;
+  if (!dbReady) {
+    dbReady = mongoose
+      .connect(process.env.MONGODB_URI)
+      .then(async () => {
+        console.log('✅  MongoDB connected');
+        await seedAdminPassword();
+      })
+      .catch((err) => {
+        dbReady = null;
+        throw err;
+      });
+  }
+  await dbReady;
+}
+
 // ── Security middleware ─────────────────────────────────────────────────────
+const allowedOrigin = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.replace(/\/+$/, '')
+  : '*';
+
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: allowedOrigin,
   credentials: true,
 }));
 app.use(express.json({ limit: '5mb' }));
+
+// Ensure DB is connected before handling API requests
+app.use(async (req, res, next) => {
+  if (req.path === '/api/health') return next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('❌  MongoDB connection failed:', err.message);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -34,16 +69,16 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });
 
-// ── Connect DB → seed admin → listen ────────────────────────────────────────
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(async () => {
-    console.log('✅  MongoDB connected');
-    await seedAdminPassword();
-    app.listen(PORT, () => console.log(`🚀  Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error('❌  MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+// ── Start server locally / on Render (skip on Vercel serverless) ────────────
+if (!process.env.VERCEL) {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => console.log(`🚀  Server running on port ${PORT}`));
+    })
+    .catch((err) => {
+      console.error('❌  MongoDB connection failed:', err.message);
+      process.exit(1);
+    });
+}
 
+module.exports = app;
