@@ -14,8 +14,8 @@ async function seedAdminPassword() {
 
   const plainPassword = process.env.ADMIN_PASSWORD;
   if (!plainPassword) {
-    console.error('❌  ADMIN_PASSWORD env var is not set!');
-    process.exit(1);
+    console.warn('⚠️  ADMIN_PASSWORD env var is not set — skipping admin seed.');
+    return;
   }
 
   const hash = await bcrypt.hash(plainPassword, 12);
