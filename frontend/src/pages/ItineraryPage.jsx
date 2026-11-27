@@ -26,7 +26,9 @@ export default function ItineraryPage() {
         setActiveSectionId(prev => prev || doc.sections[0]._id)
       }
     } catch (e) {
-      setError('Failed to load data. Make sure the backend is running.')
+      const apiBase = import.meta.env.VITE_API_URL || '(not set — using same origin)'
+      const detail = e.response?.data?.error || e.message || 'Unknown error'
+      setError(`Failed to load data (${detail}). API: ${apiBase}`)
     } finally {
       setLoading(false)
     }
